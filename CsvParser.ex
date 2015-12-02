@@ -6,6 +6,16 @@ defmodule CsvParser do
     parse(String.next_codepoint(str), {:start, [""]})
   end
   
+  def parse_chunk(chunk), do: parse_chunk(chunk, [], {:start, [""]})
+
+  def parse_chunk(chunk, acc, cont) do
+    case parse(String.next_codepoint(chunk), cont) do
+      {:ok, record, rest} -> parse_chunk(rest, [record | acc], {:start, [""]})
+      {:error, reason} -> {:error, reason}
+      result -> {:data, acc, result}
+    end
+  end
+
   def parse(nil, result) do
     result
   end
@@ -59,7 +69,7 @@ defmodule CsvParser do
   def parse({",", rest}, {:norm, data}) do
     parse(String.next_codepoint(rest), {:norm, push_field(data)})
   end
-  def parse({"\"", rest}, {:norm, data}) do
+  def parse({"\"", _rest}, {:norm, _data}) do
     {:error, :invalid_char, "\""}
   end
   def parse({c, rest}, {:norm, data}) do
