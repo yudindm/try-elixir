@@ -1,13 +1,11 @@
 defmodule CsvStream do
   def as_csv(e) do
-    Stream.transform(e,
-      fn -> {:start, ""} end,
-      &parse_next/2,
-      &finalize/1)
+    Stream.transform(e, nil, &parse_next/2)
   end
   defp parse_next(chunk, acc) do
-    case CsvParser.parse(chunk, acc) do
-      {:ok, record, rest} -> 
+    case CsvParser.parse_chunk(chunk, [], acc) do
+      {:data, records, rest} -> {records, rest} 
+      {:error, _} -> {:halt, nil}
     end
   end
 end
